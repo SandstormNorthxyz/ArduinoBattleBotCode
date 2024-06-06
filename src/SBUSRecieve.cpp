@@ -9,7 +9,12 @@ namespace SBUS {
   void init() {
     //https://infocenter.nordicsemi.com/index.jsp?topic=%2Fps_nrf52840%2Fuart.html
     //https://github.com/Reefwing-Software/Reefwing-SBUS
+//    *((uint32_t *) 0x40002508) = 0x80000000; //RTS disconnect
+//    *((uint32_t *) 0x4000250C) = 0x80000000; //TXD disconnect
+//    *((uint32_t *) 0x40002510) = 0x80000000; //CTS disconnect
+
     Serial1.begin(115200);//, (SERIAL_STOP_BIT_2 | SERIAL_PARITY_EVEN  | SERIAL_DATA_8)); , SERIAL_8E1
+
     *((uint32_t *) 0x40002524) = 0x19114A7; //baud rate register
     *((uint32_t *) 0x4000256C) = 0x000000F; //config register - not setting stop bit???
     delay(10);
