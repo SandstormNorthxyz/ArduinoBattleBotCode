@@ -12,6 +12,9 @@ BLECharacteristic readCharacteristic("2A57", BLERead | BLENotify, 20); // Charac
 namespace Bluetooth {
 
     uint16_t zeros[retrievedDataLength];
+    uint16_t* transmitionData = {0};
+
+    size_t transmitDataLength = 0;
 
     uint32_t tTimer = 0;
     uint32_t rTimer = 0;
@@ -38,8 +41,29 @@ namespace Bluetooth {
         Serial.println("BLE device is now advertising, waiting for connections...");
     }
 
-    void send(uint32_t now, const unsigned short* data, size_t length) {
+    void resetData(){
+        transmitDataLength = 0;
+        delete transmitionData;
+    }
+
+    void addData(uint16_t data){
+        transmitDataLength++;
+        uint16_t* currentData = transmitionData;
+        transmitionData = new uint16_t[transmitDataLength];
+        for (size_t i = 0; i < transmitDataLength-1; i++){
+            transmitionData[i] = currentData[i];
+        }
+        transmitionData[transmitDataLength-1] = data;
+        delete currentData;
+    }
+
+    void send(uint32_t now) {
         BLEDevice central = BLE.central();
+
+        size_t length = transmitDataLength;
+        uint16_t* data = transmitionData;
+        transmitDataLength = 0;
+        delete transmitionData;
 
 //       //&&
         if  (central.connected() && (int) (now - tTimer) > transmissionDelay) {

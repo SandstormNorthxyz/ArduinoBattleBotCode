@@ -16,8 +16,15 @@ namespace bluetoothTest{
 
     void loop(){
         uint32_t time = millis();
-        Bluetooth::send(time, data, 2);
+        Bluetooth::addData(data[0]);
+        Bluetooth::addData(data[1]);
+//        Bluetooth::addData(data[2]);
+//        Bluetooth::addData(data[3]);
+        Bluetooth::send(time);
+//        Bluetooth::resetData();
         uint16_t* newData = Bluetooth::retrieve(time);
+
+
         if (newData != nullptr){
 //            size_t size = sizeof(newData) / sizeof(uint16_t);
 //            for (size_t i = 0; i < size; i++){
