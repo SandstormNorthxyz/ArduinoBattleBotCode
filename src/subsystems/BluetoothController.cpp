@@ -1,7 +1,3 @@
-//
-// Created by Kaden Cassidy on 6/7/24.
-//
-
 #include "BluetoothController.h"
 
 // Define the BLE service and characteristics
@@ -11,19 +7,17 @@ BLECharacteristic readCharacteristic("2A57", BLERead | BLENotify, 20); // Charac
 
 namespace Bluetooth {
 
-    uint16_t zeros[retrievedDataLength];
-    uint16_t* transmitionData = {0};
-
+    uint16_t zeros[retrievedDataLength] = {0};
+    uint16_t* transmitionData = nullptr;
     size_t transmitDataLength = 0;
-
     uint32_t tTimer = 0;
     uint32_t rTimer = 0;
-    int transmissionDelay = 50; // Delay between updates (in milliseconds)
-    int receptionDelay = 20;
+    const int transmissionDelay = 50; // Delay between updates (in milliseconds)
+    const int receptionDelay = 20;
 
     void setup() {
         if (!BLE.begin()) {
-            Serial.println("starting BLE failed!");
+            Serial.println("Starting BLE failed!");
             while (1);
         }
 
@@ -34,119 +28,98 @@ namespace Bluetooth {
         BLE.addService(dataService);
         BLE.advertise();
 
-        for (size_t i = 0; i < retrievedDataLength; i++){
-            zeros[i] = 0;
-        }
-
         Serial.println("BLE device is now advertising, waiting for connections...");
     }
 
-    void resetData(){
+    void resetData() {
         transmitDataLength = 0;
-        delete transmitionData;
+        if (transmitionData) {
+            delete[] transmitionData;
+            transmitionData = nullptr;
+        }
     }
 
-    void addData(uint16_t data){
-        transmitDataLength++;
-        uint16_t* currentData = transmitionData;
-        transmitionData = new uint16_t[transmitDataLength];
-        for (size_t i = 0; i < transmitDataLength-1; i++){
-            transmitionData[i] = currentData[i];
+    void addData(uint16_t data) {
+        uint16_t* newData = new uint16_t[transmitDataLength + 1];
+        for (size_t i = 0; i < transmitDataLength; i++) {
+            newData[i] = transmitionData[i];
         }
-        transmitionData[transmitDataLength-1] = data;
-        delete currentData;
+        newData[transmitDataLength] = data;
+        delete[] transmitionData;
+        transmitionData = newData;
+        transmitDataLength++;
     }
 
     void send(uint32_t now) {
         BLEDevice central = BLE.central();
-
-        size_t length = transmitDataLength;
-        uint16_t* data = transmitionData;
-        resetData();
-
-//       //&&
-        if  (central.connected() && (int) (now - tTimer) > transmissionDelay) {
-            //sending data
+        if (central && central.connected() && (now - tTimer) > transmissionDelay) {
             tTimer = now;
-            // Collect and send data
+
             uint8_t startBit = 0xFF;
             uint8_t endBit = 0xFE;
+            size_t bufferLength = transmitDataLength * 2 + 3;
+            uint8_t* buffer = (uint8_t*)malloc(bufferLength);
 
-            size_t bufferLength = length*2 + 3;
-
-            auto* buffer = (uint8_t*)malloc(bufferLength);
-
-            buffer[0] = startBit;
-            buffer[1 + length*2] = endBit;
-            buffer[2 + length*2] = endBit;
-
-            for (size_t i = 0; i < length; i++){
-                uint16_t value = data[i];
-                buffer[1 + i*2] = (value >> 8) & 0xFF;
-                buffer[2 + i*2] = value & 0xFF;
+            if (!buffer) {
+                Serial.println("Memory allocation failed!");
+                return;
             }
 
-            writeCharacteristic.writeValue(buffer, (int)bufferLength);
+            buffer[0] = startBit;
+            buffer[bufferLength - 2] = endBit;
+            buffer[bufferLength - 1] = endBit;
 
-            delete buffer;
+            for (size_t i = 0; i < transmitDataLength; i++) {
+                buffer[1 + i * 2] = (transmitionData[i] >> 8) & 0xFF;
+                buffer[2 + i * 2] = transmitionData[i] & 0xFF;
+            }
+
+            writeCharacteristic.writeValue(buffer, bufferLength);
+            free(buffer);
+            resetData();
         }
-
-        delete data;
-
     }
 
     uint16_t* retrieve(uint32_t now) {
         BLEDevice central = BLE.central();
+        if (central && central.connected() && writeCharacteristic.written() && (now - rTimer) > receptionDelay) {
+            rTimer = now;
 
-//       //
-        if (central.connected()){
-            if (writeCharacteristic.written() && (int) (now - rTimer) > receptionDelay) {
-                // Handle data reception
-                rTimer = now;
+            int receivedLength = writeCharacteristic.valueLength();
+            size_t dataLength = (receivedLength - 3) / 2;
 
-                int receivedLength = writeCharacteristic.valueLength();
-                size_t dataLength = (receivedLength - 3) / 2;
+            if (dataLength != retrievedDataLength) {
+                return zeros;
+            }
 
-                if (dataLength != retrievedDataLength) {
+            uint8_t* receivedData = (uint8_t*)malloc(receivedLength);
+            if (!receivedData) {
+                Serial.println("Memory allocation failed!");
+                return zeros;
+            }
+
+            writeCharacteristic.readValue(receivedData, receivedLength);
+
+            if (receivedData[0] == 0xFF && receivedData[receivedLength - 1] == 0xFE && receivedData[receivedLength - 2] == 0xFE) {
+                uint16_t* parsedData = (uint16_t*)malloc(dataLength * sizeof(uint16_t));
+                if (!parsedData) {
+                    free(receivedData);
+                    Serial.println("Memory allocation failed!");
                     return zeros;
                 }
 
-                auto *receivedData = (uint8_t *) malloc(receivedLength);
-                writeCharacteristic.readValue(receivedData, receivedLength);
-
-                //                Serial.print("Received data: ");
-                //                for (int i = 0; i < receivedLength; i++) {
-                //                    Serial.print(receivedData[i], HEX);
-                //                    Serial.print(" ");
-                //                }
-                //                Serial.println();
-
-
-                // Parse the received data
-                if (receivedData[0] == 0xFF && receivedData[receivedLength - 1] == 0xFE && receivedData[receivedLength - 2] == 0xFE) {
-                    auto *parsedData = (uint16_t *) malloc(dataLength);
-
-                    for (size_t i = 0; i < dataLength; i++) {
-                        uint8_t high_byte = receivedData[1 + i * 2];
-                        uint8_t low_byte = receivedData[2 + i * 2];
-                        parsedData[i] = (high_byte << 8) | low_byte;
-                        //                        Serial.print("Parsed value ");
-                        //                        Serial.print(i);
-                        //                        Serial.print(": ");
-                        //                        Serial.println(value);
-                    }
-
-                    delete receivedData;
-                    return parsedData;
-                } else {
-                    Serial.println("Received data format is incorrect.");
-                    return zeros;
+                for (size_t i = 0; i < dataLength; i++) {
+                    parsedData[i] = (receivedData[1 + i * 2] << 8) | receivedData[2 + i * 2];
                 }
-            }else{
-                return nullptr;
+
+                free(receivedData);
+                return parsedData;
+            } else {
+                Serial.println("Received data format is incorrect.");
+                free(receivedData);
+                return zeros;
             }
         }
-
-        return zeros;
+        return nullptr;
     }
 }

@@ -7,7 +7,7 @@
 
 namespace bluetoothTest{
 
-    uint16_t data[] = {155, 655, 0, 1};
+    uint16_t data[] = {155, 655, 998, 8765};
     uint16_t retrievedData[Bluetooth::retrievedDataLength];
 
     void setup(){

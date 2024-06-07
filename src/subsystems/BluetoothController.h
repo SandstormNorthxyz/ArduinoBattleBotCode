@@ -12,13 +12,13 @@ extern BLECharacteristic writeCharacteristic;
 extern BLECharacteristic readCharacteristic;
 
 namespace Bluetooth{
-    const size_t retrievedDataLength = 2;
+    const size_t retrievedDataLength = 3;
 
     extern size_t transmitDataLength;
     extern uint32_t rTimer;
     extern uint32_t tTimer;
-    extern int transmissionDelay; // Delay between updates (in milliseconds)
-    extern int receptionDelay;
+    const extern int transmissionDelay; // Delay between updates (in milliseconds)
+    const extern int receptionDelay;
 
     extern uint16_t* transmitionData;
 

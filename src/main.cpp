@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "testing/BasicDrive.h"
-#include "testing/BluetoothTest.h"
-#define program bluetoothTest
+#include "testing/Competition.h"
+#define program competition
 
 
 
