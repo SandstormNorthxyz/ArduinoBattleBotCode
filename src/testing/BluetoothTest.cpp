@@ -3,9 +3,12 @@
 //
 
 #include "BluetoothTest.h"
-#include "subsystems/BluetoothTransmit.h"
+#include "subsystems/BluetoothController.h"
 
 namespace bluetoothTest{
+
+    uint16_t data[] = {155, 655};
+    uint16_t retrievedData[Bluetooth::retrievedDataLength];
 
     void setup(){
         Bluetooth::setup();
@@ -13,7 +16,22 @@ namespace bluetoothTest{
 
     void loop(){
         uint32_t time = millis();
-        uint16_t data[] = {155, 655};
-        Bluetooth::loop(time, data, 2);
+        Bluetooth::send(time, data, 2);
+        uint16_t* newData = Bluetooth::retrieve(time);
+        if (newData != nullptr){
+//            size_t size = sizeof(newData) / sizeof(uint16_t);
+//            for (size_t i = 0; i < size; i++){
+//
+//            }
+
+            for (size_t i = 0; i < Bluetooth::retrievedDataLength; i++){
+//                Serial.print(newData[i]);
+                retrievedData[i] = newData[i];
+                data[i]= newData[i];
+            }
+
+
+
+        }
     }
 }

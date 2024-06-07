@@ -5,6 +5,8 @@
 #ifndef ARDUINOBATTLEBOTCODE_BLUETOOTHTEST_H
 #define ARDUINOBATTLEBOTCODE_BLUETOOTHTEST_H
 
+#include <cstdint>
+
 namespace bluetoothTest{
 
     void setup();
