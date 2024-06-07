@@ -62,8 +62,7 @@ namespace Bluetooth {
 
         size_t length = transmitDataLength;
         uint16_t* data = transmitionData;
-        transmitDataLength = 0;
-        delete transmitionData;
+        resetData();
 
 //       //&&
         if  (central.connected() && (int) (now - tTimer) > transmissionDelay) {
@@ -73,12 +72,13 @@ namespace Bluetooth {
             uint8_t startBit = 0xFF;
             uint8_t endBit = 0xFE;
 
-            size_t bufferLength = length*2 + 2;
+            size_t bufferLength = length*2 + 3;
 
             auto* buffer = (uint8_t*)malloc(bufferLength);
 
             buffer[0] = startBit;
             buffer[1 + length*2] = endBit;
+            buffer[2 + length*2] = endBit;
 
             for (size_t i = 0; i < length; i++){
                 uint16_t value = data[i];
@@ -87,7 +87,11 @@ namespace Bluetooth {
             }
 
             writeCharacteristic.writeValue(buffer, (int)bufferLength);
+
+            delete buffer;
         }
+
+        delete data;
 
     }
 
@@ -101,7 +105,7 @@ namespace Bluetooth {
                 rTimer = now;
 
                 int receivedLength = writeCharacteristic.valueLength();
-                size_t dataLength = (receivedLength - 2) / 2;
+                size_t dataLength = (receivedLength - 3) / 2;
 
                 if (dataLength != retrievedDataLength) {
                     return zeros;
@@ -119,7 +123,7 @@ namespace Bluetooth {
 
 
                 // Parse the received data
-                if (receivedData[0] == 0xFF && receivedData[receivedLength - 1] == 0xFE) {
+                if (receivedData[0] == 0xFF && receivedData[receivedLength - 1] == 0xFE && receivedData[receivedLength - 2] == 0xFE) {
                     auto *parsedData = (uint16_t *) malloc(dataLength);
 
                     for (size_t i = 0; i < dataLength; i++) {
@@ -131,6 +135,8 @@ namespace Bluetooth {
                         //                        Serial.print(": ");
                         //                        Serial.println(value);
                     }
+
+                    delete receivedData;
                     return parsedData;
                 } else {
                     Serial.println("Received data format is incorrect.");

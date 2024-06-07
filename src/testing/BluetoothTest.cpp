@@ -7,7 +7,7 @@
 
 namespace bluetoothTest{
 
-    uint16_t data[] = {155, 655};
+    uint16_t data[] = {155, 655, 0, 1};
     uint16_t retrievedData[Bluetooth::retrievedDataLength];
 
     void setup(){
@@ -18,10 +18,10 @@ namespace bluetoothTest{
         uint32_t time = millis();
         Bluetooth::addData(data[0]);
         Bluetooth::addData(data[1]);
-//        Bluetooth::addData(data[2]);
-//        Bluetooth::addData(data[3]);
+        Bluetooth::addData(data[2]);
+        Bluetooth::addData(data[3]);
         Bluetooth::send(time);
-//        Bluetooth::resetData();
+        Bluetooth::resetData();
         uint16_t* newData = Bluetooth::retrieve(time);
 
 
