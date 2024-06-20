@@ -20,14 +20,14 @@ namespace Bluetooth{
     const extern int transmissionDelay; // Delay between updates (in milliseconds)
     const extern int receptionDelay;
 
-    extern uint16_t* transmitionData;
+    extern int16_t* transmitionData;
 
     void setup();
 
-    void addData(uint16_t data);
+    void addData(int16_t data);
     void resetData();
     void send(uint32_t now);
-    uint16_t* retrieve(uint32_t now);
+    float* retrieve(uint32_t now);
 }
 
 #endif //ARDUINOBATTLEBOTCODE_BLUETOOTHCONTROLLER_H

@@ -7,8 +7,8 @@ BLECharacteristic readCharacteristic("2A57", BLERead | BLENotify, 20); // Charac
 
 namespace Bluetooth {
 
-    uint16_t zeros[retrievedDataLength] = {0};
-    uint16_t* transmitionData = nullptr;
+    float zeros[retrievedDataLength] = {0};
+    int16_t* transmitionData = nullptr;
     size_t transmitDataLength = 0;
     uint32_t tTimer = 0;
     uint32_t rTimer = 0;
@@ -39,8 +39,8 @@ namespace Bluetooth {
         }
     }
 
-    void addData(uint16_t data) {
-        uint16_t* newData = new uint16_t[transmitDataLength + 1];
+    void addData(int16_t data) {
+        auto* newData = new int16_t[transmitDataLength + 1];
         for (size_t i = 0; i < transmitDataLength; i++) {
             newData[i] = transmitionData[i];
         }
@@ -62,6 +62,7 @@ namespace Bluetooth {
 
             if (!buffer) {
                 Serial.println("Memory allocation failed!");
+                resetData();
                 return;
             }
 
@@ -76,11 +77,28 @@ namespace Bluetooth {
 
             writeCharacteristic.writeValue(buffer, bufferLength);
             free(buffer);
-            resetData();
+        }
+        resetData();
+    }
+
+    float int16_to_proportion(int16_t value) {
+        // Maximum positive value for int16_t
+        const int16_t max_int16 = 32767;
+        // Minimum negative value for int16_t
+        const int16_t min_int16 = -32768;
+
+        // Convert the int16_t value to a float
+        float float_value = (float)value;
+
+        // Normalize the float value to the range -1 to 1
+        if (value >= 0) {
+            return float_value / max_int16;
+        } else {
+            return float_value / -min_int16;
         }
     }
 
-    uint16_t* retrieve(uint32_t now) {
+    float* retrieve(uint32_t now) {
         BLEDevice central = BLE.central();
         if (central && central.connected() && writeCharacteristic.written() && (now - rTimer) > receptionDelay) {
             rTimer = now;
@@ -92,7 +110,7 @@ namespace Bluetooth {
                 return zeros;
             }
 
-            uint8_t* receivedData = (uint8_t*)malloc(receivedLength);
+            auto* receivedData = (uint8_t*)malloc(receivedLength);
             if (!receivedData) {
                 Serial.println("Memory allocation failed!");
                 return zeros;
@@ -101,7 +119,7 @@ namespace Bluetooth {
             writeCharacteristic.readValue(receivedData, receivedLength);
 
             if (receivedData[0] == 0xFF && receivedData[receivedLength - 1] == 0xFE && receivedData[receivedLength - 2] == 0xFE) {
-                uint16_t* parsedData = (uint16_t*)malloc(dataLength * sizeof(uint16_t));
+                auto* parsedData = (float*)malloc(dataLength * sizeof(float));
                 if (!parsedData) {
                     free(receivedData);
                     Serial.println("Memory allocation failed!");
@@ -109,7 +127,7 @@ namespace Bluetooth {
                 }
 
                 for (size_t i = 0; i < dataLength; i++) {
-                    parsedData[i] = (receivedData[1 + i * 2] << 8) | receivedData[2 + i * 2];
+                    parsedData[i] = int16_to_proportion((int16_t)((receivedData[1 + i * 2] << 8) | receivedData[2 + i * 2]));
                 }
 
                 free(receivedData);
@@ -122,4 +140,6 @@ namespace Bluetooth {
         }
         return nullptr;
     }
+
+
 }

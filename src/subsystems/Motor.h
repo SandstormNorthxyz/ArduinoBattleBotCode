@@ -12,21 +12,24 @@
 class Motor {
     public:
         // Constructor with parameters
-        Motor(std::string name, int pin, double start, double maxS);
+        Motor(std::string name, int pin, float start, float maxS, double maxAcceleration, int deadzone);
 
         // Method to run the motor
-        void run();
-        void setSpeed(double speed);
-        void incSpeed(double inc);
+        void run(uint32_t time);
+        void setSpeed(float speed);
+        void incSpeed(float inc);
 
     private:
         std::string name;   // Motor name
         int pin;       // Pin number
-        double zero;     // Starting speed
-        double interpolation;       // convert 0 to 1 to speeds
-        double maxS;       // Maximum speed
-        double speed;     // Current speed
-        double intSpeed;  //pre interpolated speed
+        float zero;     // Starting speed
+        float interpolation;       // convert 0 to 1 to speeds
+        float targetSpeed;      //target speed
+        float speed;            // Current speed
+        float intTargetSpeed;  //pre interpolated speed
+        double maxAcceleration;
+        int deadzone;
+        uint32_t time;
 
         Servo esc;     // Servo object to control the ESC
 };
