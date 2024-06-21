@@ -1,7 +1,7 @@
 #include "Arduino.h"
 #include "testing/Competition.h"
 #include "testing/BluetoothTest.h"
-#include "testing/imuTest.h"
+
 #define program competition
 //#define program bluetoothTest
 

@@ -6,6 +6,7 @@
 #include "subsystems/BluetoothController.h"
 #include "subsystems/Motor.h"
 #include "Competition.h"
+#include "subsystems/drivebase.h"
 
 namespace competition{
 
