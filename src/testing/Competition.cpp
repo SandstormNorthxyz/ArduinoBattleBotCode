@@ -27,6 +27,7 @@ namespace competition{
 //        weapon = new Motor("Weapon", 6,1485, 2000, 1);
         driveL = new Motor("DriveL", 4,1515, 1000, 100000, 40);
         driveR = new Motor("DriveR", 3,1515, -1000, 100000, 40);
+
     }
 
     void loop(){
@@ -39,6 +40,8 @@ namespace competition{
                 data[i]= newData[i];
             }
         }
+
+
 
 //        Serial.println(data[0]);
 
