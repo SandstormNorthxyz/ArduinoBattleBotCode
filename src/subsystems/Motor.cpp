@@ -59,7 +59,7 @@ void Motor::run(uint32_t now) {
         }
     }
 
-    Bluetooth::addData((int16_t)speed);
+//    Bluetooth::addData((int16_t)speed);
     esc.writeMicroseconds((int) speed); // update ESC speed
 }
 
@@ -84,6 +84,10 @@ void Motor::setSpeed(float power){
 //    Serial.print(", ");
 //    Serial.print(this->speed);
 //    Serial.println(")");
+}
+
+float Motor::getIntSpeed(){
+    return (speed-zero) / interpolation;
 }
 
 void Motor::incSpeed(float inc){

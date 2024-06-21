@@ -31,18 +31,16 @@ class PID{
         double kP;
         double kI;
         double kD;
-        double feedForwardConstant;
-        double deadZone = deadZone;
-        double homedThreshold;
-        double homedConstant = homedConstant;
-        double lowerLimitConstant;
-        double integralSum;
-        ringBuffer<double, 3>* prevErrorRingBuffer;
-        ringBuffer<double, 3>* timeRingBuffer;
+        double feedForwardConstant{};
+        double deadZone{};
+        double homedThreshold{};
+        double homedConstant{};
+        double lowerLimitConstant{};
+        double integralSum{};
+        ringBuffer<double, 3>* prevErrorRingBuffer{};
+        ringBuffer<double, 3>* timeRingBuffer{};
 
-        bool signum(double number){
-            return number <= 0;
-        }
+        bool signum(double number);
 };
 
 #endif //ARDUINOBATTLEBOTCODE_PID_H

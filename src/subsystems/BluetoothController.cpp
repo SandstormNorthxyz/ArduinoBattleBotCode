@@ -100,45 +100,66 @@ namespace Bluetooth {
 
     float* retrieve(uint32_t now) {
         BLEDevice central = BLE.central();
-        if (central && central.connected() && writeCharacteristic.written() && (now - rTimer) > receptionDelay) {
-            rTimer = now;
+        //
+        bool writeCharacteristicFound = writeCharacteristic.written();
+        Serial.print("central: ");
+        Serial.print(central);
+        Serial.print(", Connected: ");
+        Serial.print(central.connected() );
+        Serial.print(", written: ");
+        Serial.println(writeCharacteristicFound);
+        if (central && central.connected()){
 
-            int receivedLength = writeCharacteristic.valueLength();
-            size_t dataLength = (receivedLength - 3) / 2;
+            if (writeCharacteristicFound &&  (now - rTimer) > receptionDelay) {
+//                Serial.println("Write characteristic validated");
+                rTimer = now;
 
-            if (dataLength != retrievedDataLength) {
-                return zeros;
-            }
+                int receivedLength = writeCharacteristic.valueLength();
+                size_t dataLength = (receivedLength - 3) / 2;
 
-            auto* receivedData = (uint8_t*)malloc(receivedLength);
-            if (!receivedData) {
-                Serial.println("Memory allocation failed!");
-                return zeros;
-            }
-
-            writeCharacteristic.readValue(receivedData, receivedLength);
-
-            if (receivedData[0] == 0xFF && receivedData[receivedLength - 1] == 0xFE && receivedData[receivedLength - 2] == 0xFE) {
-                auto* parsedData = (float*)malloc(dataLength * sizeof(float));
-                if (!parsedData) {
-                    free(receivedData);
+                auto* receivedData = (uint8_t*)malloc(receivedLength);
+                if (!receivedData) {
                     Serial.println("Memory allocation failed!");
-                    return zeros;
+                    //                return zeros;
+                    return nullptr;
                 }
 
-                for (size_t i = 0; i < dataLength; i++) {
-                    parsedData[i] = int16_to_proportion((int16_t)((receivedData[1 + i * 2] << 8) | receivedData[2 + i * 2]));
-                }
+                writeCharacteristic.readValue(receivedData, receivedLength);
 
-                free(receivedData);
-                return parsedData;
-            } else {
-                Serial.println("Received data format is incorrect.");
-                free(receivedData);
-                return zeros;
+                if (receivedData[0] == 0xFF && receivedData[receivedLength - 1] == 0xFE && receivedData[receivedLength - 2] == 0xFE) {
+//                    Serial.println("Recieved");
+                    auto* parsedData = (float*)malloc(dataLength * sizeof(float));
+                    if (!parsedData) {
+                        free(receivedData);
+                        Serial.println("Memory allocation failed!");
+                        //                return zeros;
+                        return nullptr;
+                    }
+
+                    for (size_t i = 0; i < dataLength; i++) {
+                        parsedData[i] = int16_to_proportion((int16_t)((receivedData[1 + i * 2] << 8) | receivedData[2 + i * 2]));
+                    }
+
+                    free(receivedData);
+//                    Serial.println("Data Parsed");
+                    return parsedData;
+                } else {
+                    Serial.println("Received data format is incorrect.");
+                    free(receivedData);
+                    //                return zeros;
+                    return nullptr;
+                }
+            }else{
+                Serial.println("write Characteristic not found or it isn't time to read");
+                return nullptr;
             }
+
+        }else{
+            Serial.println("No Write Characteristic to process");
+            return zeros;
         }
-        return nullptr;
+
+
     }
 
 

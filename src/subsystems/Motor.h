@@ -12,12 +12,13 @@
 class Motor {
     public:
         // Constructor with parameters
-        Motor(std::string name, int pin, float start, float maxS, double maxAcceleration, int deadzone);
+        Motor(std::string name, int pin, float start, float interp, double maxAcceleration, int deadzone);
 
         // Method to run the motor
         void run(uint32_t time);
         void setSpeed(float speed);
         void incSpeed(float inc);
+        float getIntSpeed();
 
     private:
         std::string name;   // Motor name

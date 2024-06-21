@@ -6,8 +6,6 @@
 
 PID::PID(double kP, double kI, double kD) : kP(kP), kI(kI), kD(kD){
     this->reset();
-    prevErrorRingBuffer = new ringBuffer<double, 3>(0);
-    timeRingBuffer = new ringBuffer<double, 3>(millis());
 }
 
 void PID::setConstants(double kP, double kI, double kD){
@@ -75,7 +73,7 @@ float PID::getCorrection(double current, double target){
     double dComponent = (error - previousError) / deltaTime * kD;
 
     //FeedForward Component
-    double lowerLimitComponent = int8_t(signum(error))*2 -1 * lowerLimitConstant;
+    double lowerLimitComponent = (int8_t(signum(error))*2 -1) * lowerLimitConstant;
 
     if (error < 0){
         error *= -1;
@@ -85,6 +83,23 @@ float PID::getCorrection(double current, double target){
         return feedForwardConstant + pComponent + iComponent + dComponent;
     }
 
+//    Serial.print("P");
+//    Serial.println(pComponent);
+//    Serial.print("I");
+//    Serial.println(iComponent);
+//
+//    Serial.print("D");
+//    Serial.println(dComponent);
+//
+//    Serial.print("L");
+//    Serial.println(lowerLimitComponent);
+//
+//    Serial.print("F");
+//    Serial.println(feedForwardConstant);
+
     return pComponent + iComponent + dComponent + lowerLimitComponent + feedForwardConstant;
 }
 
+bool PID::signum(double number){
+    return number <= 0;
+}
